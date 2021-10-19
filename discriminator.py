@@ -1,6 +1,6 @@
 # example of defining a 70x70 patchgan discriminator model
 import numpy as np
-from keras.optimizers import Adam
+from tensorflow.keras.optimizers import Adam
 from keras.initializers import RandomNormal
 from keras.models import Model
 from keras.models import Input
