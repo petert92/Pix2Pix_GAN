@@ -9,5 +9,6 @@ Model:
 The Pix2Pix model is a type of conditional GAN, or cGAN, where the generation of the output image is conditional on an input, in this case, a source image. The discriminator is provided both with a source image and the target image and must determine whether the target is a plausible transformation of the source image.
 Again, the discriminator model is updated directly, and the generator model is updated via the discriminator model,..." How to Implement Pix2Pix GAN Models From Scratch With Keras, Jason Brownlee
 
-Discriminator model is a PatchGAN
-Generator model is a U-Net
+Discriminator model is a PatchGAN, discriminator.py
+Generator model is a U-Net, generator.py
+GAN model = join D andG, join-G&D.py
