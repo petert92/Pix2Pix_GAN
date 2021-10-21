@@ -12,7 +12,9 @@ from keras.layers import BatchNormalization
 from keras.layers import LeakyReLU
 from keras.utils.vis_utils import plot_model
 
-# define an encoder block
+## define an encoder block
+# input: previus layer, filters total
+# output: encoder layer
 def define_encoder_block(layer_in, n_filters, batchnorm=True):
 	# weight initialization
 	init = RandomNormal(stddev=0.02)
@@ -25,7 +27,9 @@ def define_encoder_block(layer_in, n_filters, batchnorm=True):
 	g = LeakyReLU(alpha=0.2)(g)
 	return g
 
-# define a decoder block
+## define a decoder block
+# input: previus layer, skip connection layer, filters count
+# output: decoder layer
 def decoder_block(layer_in, skip_in, n_filters, dropout=True):
 	# weight initialization
 	init = RandomNormal(stddev=0.02)
@@ -42,7 +46,9 @@ def decoder_block(layer_in, skip_in, n_filters, dropout=True):
 	g = Activation('relu')(g)
 	return g
 
-# define the standalone generator model
+## define the standalone generator model (U-Net NN)
+# input: source image shape
+# output: U-Net NN model
 def define_generator(image_shape=(256,256,3)):
 	# weight initialization
 	init = RandomNormal(stddev=0.02)

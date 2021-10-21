@@ -11,7 +11,9 @@ from keras.layers import Concatenate
 from keras.layers import BatchNormalization
 from keras.utils.vis_utils import plot_model
 
-# define the discriminator model
+## define the discriminator model (PatchGAN)
+# input: source&Generator_output image
+# output: PatchGAN model
 def define_discriminator(image_shape):
 	# weight initialization
 	init = RandomNormal(stddev=0.02)
