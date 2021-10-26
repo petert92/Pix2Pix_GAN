@@ -19,8 +19,10 @@ def load_real_samples(filename):
 	X2 = (X2 - 127.5) / 127.5
 	return [X1, X2]
  
+"""helper function that will select a batch of real source and target images and the associated output (1.0)"""
 ## select a batch of random samples, returns images and target
-# prepare a batch of random pairs of images from the training dataset, and the corresponding discriminator label of class=1 to indicate they are real.
+# input: dataset, real samples total,  output matrix shape
+# output: 2 arrays of random samples, ones matrix(output)
 def generate_real_samples(dataset, n_samples, patch_shape):
 	# unpack dataset
 	trainA, trainB = dataset
@@ -32,8 +34,11 @@ def generate_real_samples(dataset, n_samples, patch_shape):
 	y = ones((n_samples, patch_shape, patch_shape, 1))
 	return [X1, X2], y
  
+
+"""function to generate a batch of fake images and the associated output (0.0)"""
 ## generate a batch of images, returns images and targets
-# uses the generator model and a batch of real source images to generate an equivalent batch of target images for the discriminator, with the label class-0 to indicate to the discriminator that they are fake.
+# input: generator model, samples total, ones matrix(output)
+# output: array of fake samples, zeros matrix(output)
 def generate_fake_samples(g_model, samples, patch_shape):
 	# generate fake instance
 	X = g_model.predict(samples)
