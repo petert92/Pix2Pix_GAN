@@ -1,24 +1,83 @@
 from updateWeights import generate_real_samples, generate_fake_samples
 from join_GandD import define_gan, define_generator, define_discriminator
+from numpy import load
+from numpy import zeros
+from numpy import ones
+from numpy.random import randint
+from matplotlib import pyplot
 
-""" one step train iteration"""
+# load and prepare training images
+def load_real_samples(filename):
+	# load compressed arrays
+	data = load(filename)
+	# unpack arrays
+	X1, X2 = data['arr_0'], data['arr_1']
+	# scale from [0,255] to [-1,1]
+	X1 = (X1 - 127.5) / 127.5
+	X2 = (X2 - 127.5) / 127.5
+	return [X1, X2]
+ 
+# select a batch of random samples, returns images and target
+def generate_real_samples(dataset, n_samples, patch_shape):
+	# unpack dataset
+	trainA, trainB = dataset
+	# choose random instances
+	ix = randint(0, trainA.shape[0], n_samples)
+	# retrieve selected images
+	X1, X2 = trainA[ix], trainB[ix]
+	# generate 'real' class labels (1)
+	y = ones((n_samples, patch_shape, patch_shape, 1))
+	return [X1, X2], y
+ 
+# generate a batch of images, returns images and targets
+def generate_fake_samples(g_model, samples, patch_shape):
+	# generate fake instance
+	X = g_model.predict(samples)
+	# create 'fake' class labels (0)
+	y = zeros((len(X), patch_shape, patch_shape, 1))
+	return X, y
 
-""" (1): select a batch of source and target images by calling generate_real_samples()
-n_batch=1,  256x25 6assume image input => n_patch for D output=16x16 (according to actual design) """
+# generate samples and save as a plot and save the model
+def summarize_performance(step, g_model, dataset, n_samples=3):
+	# select a sample of input images
+	[X_realA, X_realB], _ = generate_real_samples(dataset, n_samples, 1)
+	# generate a batch of fake samples
+	X_fakeB, _ = generate_fake_samples(g_model, X_realA, 1)
+	# scale all pixels from [-1,1] to [0,1]
+	X_realA = (X_realA + 1) / 2.0
+	X_realB = (X_realB + 1) / 2.0
+	X_fakeB = (X_fakeB + 1) / 2.0
+	# plot real source images
+	for i in range(n_samples):
+		pyplot.subplot(3, n_samples, 1 + i)
+		pyplot.axis('off')
+		pyplot.imshow(X_realA[i])
+	# plot generated target image
+	for i in range(n_samples):
+		pyplot.subplot(3, n_samples, 1 + n_samples + i)
+		pyplot.axis('off')
+		pyplot.imshow(X_fakeB[i])
+	# plot real target image
+	for i in range(n_samples):
+		pyplot.subplot(3, n_samples, 1 + n_samples*2 + i)
+		pyplot.axis('off')
+		pyplot.imshow(X_realB[i])
+	# save plot to file
+	filename1 = 'plot_%06d.png' % (step+1)
+	pyplot.savefig(filename1)
+	pyplot.close()
+	# save the generator model
+	filename2 = 'model_%06d.h5' % (step+1)
+	g_model.save(filename2)
+	print('>Saved: %s and %s' % (filename1, filename2))
 
-""" (2) use the batches of selected real source images to generate corresponding batches of generated or fake target images"""
-
-""" (3) use the real and fake images, as well as their targets, to update the standalone discriminator model"""
-
-
-""" (4) Again, the discriminator model is updated directly, and the generator model is updated via the discriminator model, although the loss function is updated. 
-The generator is trained via adversarial loss, which encourages the generator to generate plausible images in the target domain. 
-The generator is also updated via L1 loss measured between the generated image and the expected output image. 
-This additional loss encourages the generator model to create plausible translations of the source image."""
-""" (4) two loss functions, but three loss values calculated for a batch update, only interest on the weighted sum of the adversarial and L1 loss values for the batch."""
-
-# train pix2pix models
-def train(d_model, g_model, gan_model, dataset, n_epochs=100, n_batch=1, n_patch=16):
+## train pix2pix models
+# input: descriminator, generator and gan model, train dataset
+# output: print(summarize performance)
+# train pix2pix model
+def train(d_model, g_model, gan_model, dataset, n_epochs=100, n_batch=1):
+	# determine the output square shape of the discriminator
+	n_patch = d_model.output_shape[1]
 	# unpack dataset
 	trainA, trainB = dataset
 	# calculate the number of batches per training epoch
@@ -27,24 +86,28 @@ def train(d_model, g_model, gan_model, dataset, n_epochs=100, n_batch=1, n_patch
 	n_steps = bat_per_epo * n_epochs
 	# manually enumerate epochs
 	for i in range(n_steps):
-		# select a batch of real samples (1)
+		# select a batch of real samples
 		[X_realA, X_realB], y_real = generate_real_samples(dataset, n_batch, n_patch)
-		# generate a batch of fake samples (2)
+		# generate a batch of fake samples
 		X_fakeB, y_fake = generate_fake_samples(g_model, X_realA, n_patch)
-		# update discriminator for real samples (3)
+		# update discriminator for real samples
 		d_loss1 = d_model.train_on_batch([X_realA, X_realB], y_real)
-		# update discriminator for generated samples (3)
+		# update discriminator for generated samples
 		d_loss2 = d_model.train_on_batch([X_realA, X_fakeB], y_fake)
-		# update the generator (4)
+		# update the generator
 		g_loss, _, _ = gan_model.train_on_batch(X_realA, [y_real, X_realB])
 		# summarize performance
-		print('&gt;%d, d1[%.3f] d2[%.3f] g[%.3f]' % (i+1, d_loss1, d_loss2, g_loss))
+		print('>%d, d1[%.3f] d2[%.3f] g[%.3f]' % (i+1, d_loss1, d_loss2, g_loss))
+		# summarize model performance
+		if (i+1) % (bat_per_epo * 10) == 0:
+			summarize_performance(i, g_model, dataset)
 
-...
+''' production '''
 # load image data
-dataset = ...
-# define image shape
-image_shape = (256,256,3)
+dataset = load_real_samples('maps_256.npz')
+print('Loaded', dataset[0].shape, dataset[1].shape)
+# define input shape based on the loaded dataset
+image_shape = dataset[0].shape[1:]
 # define the models
 d_model = define_discriminator(image_shape)
 g_model = define_generator(image_shape)
@@ -52,3 +115,4 @@ g_model = define_generator(image_shape)
 gan_model = define_gan(g_model, d_model, image_shape)
 # train model
 train(d_model, g_model, gan_model, dataset)
+
