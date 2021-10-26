@@ -1,4 +1,5 @@
-from numpy import randint, ones, zeros
+from numpy import ones, zeros
+from numpy.random import randint
 
 """helper function that will select a batch of real source and target images and the associated output (1.0)"""
 ## select a batch of random samples, returns images and target

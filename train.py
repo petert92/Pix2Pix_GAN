@@ -6,7 +6,9 @@ from numpy import ones
 from numpy.random import randint
 from matplotlib import pyplot
 
-# load and prepare training images
+
+
+## load and prepare training images
 def load_real_samples(filename):
 	# load compressed arrays
 	data = load(filename)
@@ -17,7 +19,8 @@ def load_real_samples(filename):
 	X2 = (X2 - 127.5) / 127.5
 	return [X1, X2]
  
-# select a batch of random samples, returns images and target
+## select a batch of random samples, returns images and target
+# prepare a batch of random pairs of images from the training dataset, and the corresponding discriminator label of class=1 to indicate they are real.
 def generate_real_samples(dataset, n_samples, patch_shape):
 	# unpack dataset
 	trainA, trainB = dataset
@@ -29,7 +32,8 @@ def generate_real_samples(dataset, n_samples, patch_shape):
 	y = ones((n_samples, patch_shape, patch_shape, 1))
 	return [X1, X2], y
  
-# generate a batch of images, returns images and targets
+## generate a batch of images, returns images and targets
+# uses the generator model and a batch of real source images to generate an equivalent batch of target images for the discriminator, with the label class-0 to indicate to the discriminator that they are fake.
 def generate_fake_samples(g_model, samples, patch_shape):
 	# generate fake instance
 	X = g_model.predict(samples)
@@ -37,7 +41,7 @@ def generate_fake_samples(g_model, samples, patch_shape):
 	y = zeros((len(X), patch_shape, patch_shape, 1))
 	return X, y
 
-# generate samples and save as a plot and save the model
+## generate samples and save as a plot and save the model
 def summarize_performance(step, g_model, dataset, n_samples=3):
 	# select a sample of input images
 	[X_realA, X_realB], _ = generate_real_samples(dataset, n_samples, 1)
