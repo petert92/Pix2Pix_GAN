@@ -1,4 +1,3 @@
-from updateWeights import generate_real_samples, generate_fake_samples
 from join_GandD import define_gan, define_generator, define_discriminator
 from numpy import load
 from numpy import zeros
